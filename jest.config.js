@@ -1,5 +1,5 @@
 module.exports = {
-  roots: ["<rootDir>/src", "<rootDir>/tests"],
+  roots: ["<rootDir>/src"],
   collectCoverageFrom: [
     "<rootDir>/src/**/*.{ts,tsx}",
     "!<rootDir>/src/main/**/*",
@@ -7,7 +7,6 @@ module.exports = {
     "!**/*.d.ts",
   ],
   coverageDirectory: "coverage",
-  setupFilesAfterEnv: ["<rootDir>/src/main/config/jest-setup.ts"],
   testPathIgnorePatterns: [
     "<rootDir>/node_modules/",
     "<rootDir>/tests/e2e/cypress",
