@@ -1,15 +1,7 @@
-import { IHttpPostClient } from "@/data/protocols/http/http-post-client";
-import {
-  HttpResponse,
-  HttpStatusCode,
-} from "@/data/protocols/http/http-response";
-import { InvalidCredentialsError } from "@/domain/errors/invalid-credentials-error";
-import { UnespectedError } from "@/domain/errors/unespected-error";
-import { AccountModel } from "@/domain/models/account-model";
-import {
-  AuthenticationParams,
-  IAuthentication,
-} from "@/domain/usecases/authentication";
+import { IHttpPostClient, HttpStatusCode } from "@/data/protocols/http";
+import { InvalidCredentialsError, UnespectedError } from "@/domain/errors";
+import { AuthenticationParams, IAuthentication } from "@/domain/usecases";
+import { AccountModel } from "@/domain/models";
 
 export class RemoteAuthentication implements IAuthentication {
   constructor(
