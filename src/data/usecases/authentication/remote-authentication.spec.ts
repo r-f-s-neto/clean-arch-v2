@@ -1,5 +1,7 @@
+import { HttpStatusCode } from "@/data/protocols/http/http-response";
 import { RemoteAuthentication } from "./remote-authentication";
 import { HttpPostClientSpy } from "@/data/tests/mock-http-client";
+import { InvalidCredentialsError } from "@/domain/errors/invalid-credentials-error";
 import { mockAuthentication } from "@/domain/tests/mock-authentication";
 import faker from "faker";
 
@@ -8,11 +10,7 @@ type SutTypes = {
   sut: RemoteAuthentication;
 };
 
-const makeSut = (
-  url: string = faker.internet.url(),
-  email: string = faker.internet.email(),
-  password: string = faker.internet.password()
-): SutTypes => {
+const makeSut = (url: string = faker.internet.url()): SutTypes => {
   const httpPostClientSpy = new HttpPostClientSpy();
   const sut = new RemoteAuthentication(url, httpPostClientSpy);
 
@@ -30,12 +28,17 @@ describe("RemoteAuthentication", () => {
 
   it("Should call HttpPostClient with correct body", async () => {
     const authenticationParams = mockAuthentication();
-    const { sut, httpPostClientSpy } = makeSut(
-      faker.internet.url(),
-      authenticationParams.email,
-      authenticationParams.password
-    );
+    const { sut, httpPostClientSpy } = makeSut(faker.internet.url());
     await sut.auth(authenticationParams);
     expect(httpPostClientSpy.body).toEqual(authenticationParams);
+  });
+
+  it("Shoul throw InvalidCredentialsError if HttpPostClient returns 401", async () => {
+    const { sut, httpPostClientSpy } = makeSut();
+    httpPostClientSpy.response = {
+      statusCode: HttpStatusCode.unathorized,
+    };
+    const promise = sut.auth(mockAuthentication());
+    await expect(promise).rejects.toThrow(new InvalidCredentialsError());
   });
 });
