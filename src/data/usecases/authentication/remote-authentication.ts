@@ -21,7 +21,7 @@ export class RemoteAuthentication implements IAuthentication {
     switch (response.statusCode) {
       case HttpStatusCode.ok:
         return Promise.resolve(response.body);
-      case HttpStatusCode.unathorized:
+      case HttpStatusCode.unauthorized:
         throw new InvalidCredentialsError();
       default:
         throw new UnespectedError();
