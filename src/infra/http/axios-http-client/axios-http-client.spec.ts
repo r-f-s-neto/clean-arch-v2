@@ -2,7 +2,11 @@ import axios from "axios";
 import { AxiosHttpClient } from "./axios-http-client";
 import faker from "faker";
 
-const makeSut = () => {
+type SutTypes = {
+  sut: AxiosHttpClient;
+};
+
+const makeSut = (): SutTypes => {
   const sut = new AxiosHttpClient();
 
   return { sut };
