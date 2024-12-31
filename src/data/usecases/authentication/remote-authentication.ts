@@ -6,9 +6,12 @@ import {
 import { InvalidCredentialsError } from "@/domain/errors/invalid-credentials-error";
 import { UnespectedError } from "@/domain/errors/unespected-error";
 import { AccountModel } from "@/domain/models/account-model";
-import { AuthenticationParams } from "@/domain/usecases/authentication";
+import {
+  AuthenticationParams,
+  IAuthentication,
+} from "@/domain/usecases/authentication";
 
-export class RemoteAuthentication {
+export class RemoteAuthentication implements IAuthentication {
   constructor(
     private readonly url: string,
     private readonly httpPostClient: IHttpPostClient<
@@ -17,7 +20,7 @@ export class RemoteAuthentication {
     >
   ) {}
 
-  async auth(params: AuthenticationParams): Promise<void> {
+  async auth(params: AuthenticationParams): Promise<AccountModel> {
     const response = await this.httpPostClient.post({
       url: this.url,
       body: params,
@@ -25,7 +28,7 @@ export class RemoteAuthentication {
 
     switch (response.statusCode) {
       case HttpStatusCode.ok:
-        return Promise.resolve();
+        return Promise.resolve(response.body);
       case HttpStatusCode.unathorized:
         throw new InvalidCredentialsError();
       default:
