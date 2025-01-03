@@ -1,11 +1,10 @@
-const path = require("path");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const path = require("path");
 
 module.exports = {
   mode: "development",
   entry: "./src/main/index.tsx",
   output: {
-    //indica onde vai ser gerado o bundle
     path: path.join(__dirname, "public/js"),
     publicPath: "/public/js",
     filename: "bundle.js",
@@ -43,11 +42,14 @@ module.exports = {
     ],
   },
   devServer: {
-    contentBase: "./public",
-    writeToDisk: true,
-    historyApiFallback: true,
+    static: "./public",
+    devMiddleware: {
+      writeToDisk: true,
+    },
+    historyApiFallback: {
+      rewrites: [{ from: /./, to: "/index.html" }],
+    },
   },
-  //tudo em externals não é gerado no bundle
   externals: {
     react: "React",
     "react-dom": "ReactDOM",
