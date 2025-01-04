@@ -1,6 +1,5 @@
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import "@/presentation/styles/global.scss";
 
 const Login = lazy(() => import("@/presentation/pages/login"));
 

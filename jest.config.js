@@ -16,6 +16,7 @@ module.exports = {
     ".+\\.(ts|tsx)$": "ts-jest",
   },
   moduleNameMapper: {
+    "\\.(svg)$": "<rootDir>/__mocks__/svgrMock.js",
     "@/tests/(.*)": "<rootDir>/tests/$1",
     "@/(.*)": "<rootDir>/src/$1",
     "\\.scss$": "identity-obj-proxy",
