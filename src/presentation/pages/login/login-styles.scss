@@ -1,9 +1,4 @@
-$white: #fff;
-$black: #000;
-$backgroud: #f2f2f2;
-$primary: #880e4f;
-$primaryDark: #560027;
-$primaryLight: #bc477b;
+@use "../../styles/colors.scss" as *;
 
 * {
   font-family: "Roboto", sans-serif;
@@ -89,5 +84,13 @@ button {
   .footer {
     background-color: $primary;
     height: 40px;
+  }
+}
+
+.submit {
+  &:disabled {
+    background-color: $disabled;
+    
+    cursor: none;
   }
 }
