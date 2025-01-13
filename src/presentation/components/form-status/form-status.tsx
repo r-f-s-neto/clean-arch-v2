@@ -15,7 +15,9 @@ const FormStatus: React.FC = () => {
           {mainError}
         </span>
       )}
-      {isLoading && <Spinner className={Styles.spinner} />}
+      {isLoading && (
+        <Spinner data-testid="loading" className={Styles.spinner} />
+      )}
     </div>
   );
 };

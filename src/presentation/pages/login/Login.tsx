@@ -8,12 +8,14 @@ import {
 } from "@/presentation/components";
 import FormContext from "@/presentation/contexts/form/form-context";
 import { Validation } from "@/presentation/protocols/validation";
+import { IAuthentication } from "@/domain/usecases";
 
 type Props = {
   validation: Validation;
+  authentication: IAuthentication;
 };
 
-const Login: React.FC<Props> = ({ validation }) => {
+const Login: React.FC<Props> = ({ validation, authentication }) => {
   const [state, setState] = useState({
     isLoading: false,
     emailError: "Campo Obrigatório",
@@ -22,12 +24,27 @@ const Login: React.FC<Props> = ({ validation }) => {
     email: "",
     password: "",
   });
+  const isSubmitDisabled =
+    !!state.emailError || !!state.passwordError || !!state.mainError;
+
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
+    e.preventDefault();
+    setState((prevState) => {
+      return { ...prevState, isLoading: true };
+    });
+    await authentication.auth({
+      email: state.email,
+      password: state.password,
+    });
+  };
 
   return (
     <div className={Styles.login}>
       <LoginHeader />
       <FormContext.Provider value={{ state, setState, validation }}>
-        <form className={Styles.form}>
+        <form className={Styles.form} onSubmit={handleSubmit}>
           <h2>Login</h2>
           <Input type="email" name="email" placeholder="Digite seu e-mail" />
           <Input
@@ -38,7 +55,7 @@ const Login: React.FC<Props> = ({ validation }) => {
           <button
             className={Styles.submit}
             data-testid="submit"
-            disabled
+            disabled={isSubmitDisabled}
             type="submit"
           >
             Entrar

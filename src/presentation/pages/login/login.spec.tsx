@@ -9,16 +9,21 @@ import {
 import Login from "./Login";
 import { ValidationSpy } from "@/presentation/tests/mock-validation";
 import faker from "faker";
+import { AuthenticationSpy } from "@/presentation/tests/mock-authentication";
 
 type SutTypes = {
   sut: RenderResult;
   validationSpy: ValidationSpy;
+  authenticationSpy: AuthenticationSpy;
 };
 
 const makeSut = (): SutTypes => {
   const validationSpy = new ValidationSpy();
-  const sut = render(<Login validation={validationSpy} />);
-  return { sut, validationSpy };
+  const authenticationSpy = new AuthenticationSpy();
+  const sut = render(
+    <Login validation={validationSpy} authentication={authenticationSpy} />
+  );
+  return { sut, validationSpy, authenticationSpy };
 };
 
 describe("Login Component", () => {
@@ -121,5 +126,48 @@ describe("Login Component", () => {
     const emailStatus = getByTestId("email-status");
     expect(emailStatus.title).toBe("Tudo Certo");
     expect(emailStatus.textContent).toBe("🟢");
+  });
+
+  test("Should enable submit button available if form is valid", () => {
+    const { sut, validationSpy } = makeSut();
+    const { getByTestId } = sut;
+    validationSpy.errorMessage = null;
+    const email = faker.internet.email();
+    const emailInput = getByTestId("email");
+    const password = faker.internet.password();
+    const passwordInput = getByTestId("password");
+    fireEvent.input(emailInput, { target: { value: email } });
+    fireEvent.input(passwordInput, { target: { value: password } });
+    const submitButton = getByTestId("submit");
+    expect(submitButton).toHaveProperty("disabled", false);
+  });
+
+  test("Should show loading when press submit button", () => {
+    const { sut, validationSpy } = makeSut();
+    const { getByTestId, queryByTestId } = sut;
+    validationSpy.errorMessage = null;
+    const email = faker.internet.email();
+    const emailInput = getByTestId("email");
+    const password = faker.internet.password();
+    const passwordInput = getByTestId("password");
+    fireEvent.input(emailInput, { target: { value: email } });
+    fireEvent.input(passwordInput, { target: { value: password } });
+    const submitButton = getByTestId("submit");
+    fireEvent.click(submitButton);
+    expect(queryByTestId("loading")).not.toBeNull();
+  });
+
+  test("Should call authentication with correct values", () => {
+    const { sut, authenticationSpy } = makeSut();
+    const { getByTestId } = sut;
+    const email = faker.internet.email();
+    const emailInput = getByTestId("email");
+    const password = faker.internet.password();
+    const passwordInput = getByTestId("password");
+    fireEvent.input(emailInput, { target: { value: email } });
+    fireEvent.input(passwordInput, { target: { value: password } });
+    const submitButton = getByTestId("submit");
+    fireEvent.click(submitButton);
+    expect(authenticationSpy.params).toEqual({ email, password });
   });
 });
