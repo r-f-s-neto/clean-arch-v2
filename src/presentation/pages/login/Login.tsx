@@ -31,13 +31,28 @@ const Login: React.FC<Props> = ({ validation, authentication }) => {
     e: React.FormEvent<HTMLFormElement>
   ): Promise<void> => {
     e.preventDefault();
+    if (state.isLoading) {
+      return;
+    }
     setState((prevState) => {
       return { ...prevState, isLoading: true };
     });
-    await authentication.auth({
-      email: state.email,
-      password: state.password,
-    });
+    try {
+      const account = await authentication.auth({
+        email: state.email,
+        password: state.password,
+      });
+
+      localStorage.setItem("accessToken", account.accessToken);
+    } catch (error) {
+      setState((prevState) => {
+        return {
+          ...prevState,
+          isLoading: false,
+          mainError: error.message,
+        };
+      });
+    }
   };
 
   return (

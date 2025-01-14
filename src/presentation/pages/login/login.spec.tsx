@@ -1,15 +1,18 @@
+import "jest-localstorage-mock";
 import React from "react";
 import {
   cleanup,
   fireEvent,
   render,
   RenderResult,
+  waitFor,
   within,
 } from "@testing-library/react";
 import Login from "./Login";
 import { ValidationSpy } from "@/presentation/tests/mock-validation";
 import faker from "faker";
 import { AuthenticationSpy } from "@/presentation/tests/mock-authentication";
+import { InvalidCredentialsError } from "@/domain/errors";
 
 type SutTypes = {
   sut: RenderResult;
@@ -28,7 +31,11 @@ const makeSut = (): SutTypes => {
 
 describe("Login Component", () => {
   // limpa para cada teste
+  beforeEach(() => {
+    localStorage.clear();
+  });
   afterEach(cleanup);
+
   test("Should component starts with initial states", () => {
     const { sut } = makeSut();
     const { getByTestId } = sut;
@@ -169,5 +176,93 @@ describe("Login Component", () => {
     const submitButton = getByTestId("submit");
     fireEvent.click(submitButton);
     expect(authenticationSpy.params).toEqual({ email, password });
+  });
+
+  test("should call authentication once", () => {
+    const { sut, authenticationSpy, validationSpy } = makeSut();
+    validationSpy.errorMessage = null;
+    const { getByTestId } = sut;
+    const email = faker.internet.email();
+    const password = faker.internet.password();
+    const emailInput = getByTestId("email");
+    fireEvent.input(emailInput, { target: { value: email } });
+    const passwordInput = getByTestId("password");
+    fireEvent.input(passwordInput, { target: { value: password } });
+    const submitButton = getByTestId("submit");
+    fireEvent.click(submitButton);
+    fireEvent.click(submitButton);
+    expect(authenticationSpy.auth).toHaveBeenCalledTimes(1);
+  });
+
+  test("Should not call authentication if form isInvalid", () => {
+    const { sut, authenticationSpy, validationSpy } = makeSut();
+    validationSpy.errorMessage = "any_error";
+    const { getByTestId } = sut;
+    const email = faker.internet.email();
+    const password = faker.internet.password();
+    const emailInput = getByTestId("email");
+    fireEvent.input(emailInput, { target: { value: email } });
+    const passwordInput = getByTestId("password");
+    fireEvent.input(passwordInput, { target: { value: password } });
+    const submitButton = getByTestId("submit");
+    fireEvent.click(submitButton);
+    expect(authenticationSpy.auth).toHaveBeenCalledTimes(0);
+  });
+
+  // test("Should presents error if authentication fails", async () => {
+  //   const { sut, authenticationSpy, validationSpy } = makeSut();
+  //   validationSpy.errorMessage = null;
+  //   authenticationSpy.error = true;
+  //   const { getByTestId, findByTestId } = sut;
+  //   const email = faker.internet.email();
+  //   const password = faker.internet.password();
+  //   const emailInput = getByTestId("email");
+  //   fireEvent.input(emailInput, { target: { value: email } });
+  //   const passwordInput = getByTestId("password");
+  //   fireEvent.input(passwordInput, { target: { value: password } });
+  //   const submitButton = getByTestId("submit");
+  //   fireEvent.click(submitButton);
+  //   const error = await findByTestId("error-message");
+  //   expect(error).not.toBeNull();
+  // });
+
+  test("Should presents error if authentication fails", async () => {
+    const { sut, authenticationSpy, validationSpy } = makeSut();
+    validationSpy.errorMessage = null;
+    jest
+      .spyOn(authenticationSpy, "auth")
+      .mockReturnValueOnce(Promise.reject(new InvalidCredentialsError()));
+    const { getByTestId, findByTestId } = sut;
+    const email = faker.internet.email();
+    const password = faker.internet.password();
+    const emailInput = getByTestId("email");
+    fireEvent.input(emailInput, { target: { value: email } });
+    const passwordInput = getByTestId("password");
+    fireEvent.input(passwordInput, { target: { value: password } });
+    const submitButton = getByTestId("submit");
+    fireEvent.click(submitButton);
+    const error = await findByTestId("error-message");
+    expect(error).not.toBeNull();
+  });
+
+  test("Should add accessToken to localStorage", async () => {
+    const { sut, authenticationSpy, validationSpy } = makeSut();
+    validationSpy.errorMessage = null;
+    const { getByTestId } = sut;
+    const email = faker.internet.email();
+    const password = faker.internet.password();
+    const emailInput = getByTestId("email");
+    fireEvent.input(emailInput, { target: { value: email } });
+    const passwordInput = getByTestId("password");
+    fireEvent.input(passwordInput, { target: { value: password } });
+    const submitButton = getByTestId("submit");
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        "accessToken",
+        authenticationSpy.account.accessToken
+      );
+    });
   });
 });
