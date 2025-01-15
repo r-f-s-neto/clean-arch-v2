@@ -9,6 +9,7 @@ import {
 import FormContext from "@/presentation/contexts/form/form-context";
 import { Validation } from "@/presentation/protocols/validation";
 import { IAuthentication } from "@/domain/usecases";
+import { Link, useNavigate } from "react-router-dom";
 
 type Props = {
   validation: Validation;
@@ -16,6 +17,7 @@ type Props = {
 };
 
 const Login: React.FC<Props> = ({ validation, authentication }) => {
+  const navigate = useNavigate();
   const [state, setState] = useState({
     isLoading: false,
     emailError: "Campo Obrigatório",
@@ -44,6 +46,7 @@ const Login: React.FC<Props> = ({ validation, authentication }) => {
       });
 
       localStorage.setItem("accessToken", account.accessToken);
+      navigate("/");
     } catch (error) {
       setState((prevState) => {
         return {
@@ -75,7 +78,9 @@ const Login: React.FC<Props> = ({ validation, authentication }) => {
           >
             Entrar
           </button>
-          <span className={Styles.link}>Criar conta</span>
+          <Link data-testid="signup" to={"/signup"} className={Styles.link}>
+            Criar conta
+          </Link>
           <FormStatus />
         </form>
       </FormContext.Provider>

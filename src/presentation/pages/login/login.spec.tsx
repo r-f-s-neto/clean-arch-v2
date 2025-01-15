@@ -13,6 +13,7 @@ import { ValidationSpy } from "@/presentation/tests/mock-validation";
 import faker from "faker";
 import { AuthenticationSpy } from "@/presentation/tests/mock-authentication";
 import { InvalidCredentialsError } from "@/domain/errors";
+import { MemoryRouter, useNavigate } from "react-router-dom";
 
 type SutTypes = {
   sut: RenderResult;
@@ -20,11 +21,25 @@ type SutTypes = {
   authenticationSpy: AuthenticationSpy;
 };
 
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useNavigate: jest.fn(),
+}));
+
+const navigate = jest.fn();
+(useNavigate as jest.Mock).mockReturnValue(navigate);
+
 const makeSut = (): SutTypes => {
   const validationSpy = new ValidationSpy();
   const authenticationSpy = new AuthenticationSpy();
   const sut = render(
-    <Login validation={validationSpy} authentication={authenticationSpy} />
+    <MemoryRouter
+      initialEntries={["/login"]}
+      initialIndex={0}
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
+      <Login validation={validationSpy} authentication={authenticationSpy} />
+    </MemoryRouter>
   );
   return { sut, validationSpy, authenticationSpy };
 };
@@ -263,6 +278,17 @@ describe("Login Component", () => {
         "accessToken",
         authenticationSpy.account.accessToken
       );
+      expect(navigate).toHaveBeenCalledWith("/");
+    });
+  });
+
+  test("Should got to sigup page", () => {
+    const { sut } = makeSut();
+    const { getByTestId } = sut;
+    const register = getByTestId("signup");
+    fireEvent.click(register);
+    waitFor(() => {
+      expect(window.location.pathname).toBe("/signup");
     });
   });
 });
