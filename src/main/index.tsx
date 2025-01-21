@@ -4,5 +4,6 @@ import ReactDOM from "react-dom/client"; // Modificado para importar de 'react-d
 import "@/presentation/styles/global.scss";
 
 // Criação do root usando createRoot
+const makeLogin = () => import("@/main/factories/pages/login/login-factory");
 const root = ReactDOM.createRoot(document.getElementById("main"));
-root.render(<Router />);
+root.render(<Router makeLogin={makeLogin} />);

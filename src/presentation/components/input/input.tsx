@@ -12,6 +12,8 @@ const Input: React.FC<Props> = (props) => {
   const { state, setState, validation } = useContext(FormContext);
   const error = state[`${props.name}Error`];
 
+  console.log(error);
+
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const newInputValue = event.target.value;
     const errorMessage = validation.validate(props.name, newInputValue);

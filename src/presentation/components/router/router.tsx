@@ -1,14 +1,16 @@
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-const Login = lazy(() => import("@/presentation/pages/login"));
-
-const Router: React.FC = () => {
+type RouterProps = {
+  makeLogin: () => Promise<{ default: React.ComponentType<any> }>;
+};
+const Router: React.FC<RouterProps> = ({ makeLogin }: RouterProps) => {
+  const lazyMakeLogin = lazy(makeLogin);
   return (
     <BrowserRouter>
       <Suspense fallback={<div>carregando...</div>}>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={React.createElement(lazyMakeLogin)} />
         </Routes>
       </Suspense>
     </BrowserRouter>
