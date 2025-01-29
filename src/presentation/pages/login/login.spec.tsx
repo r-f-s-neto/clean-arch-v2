@@ -8,7 +8,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import Login from "./Login";
+import { Login } from "@/presentation/pages";
 import { ValidationSpy } from "@/presentation/tests/mock-validation";
 import faker from "faker";
 import { AuthenticationSpy } from "@/presentation/tests/mock-authentication";
@@ -290,5 +290,16 @@ describe("Login Component", () => {
     waitFor(() => {
       expect(window.location.pathname).toBe("/signup");
     });
+  });
+
+  test("Should disable readonly in password and email input", () => {
+    const { sut } = makeSut();
+    const { getByTestId } = sut;
+    const emailInput = getByTestId("email");
+    fireEvent.focus(emailInput);
+    expect(emailInput).toHaveProperty("readOnly", false);
+    const passwordInput = getByTestId("password");
+    fireEvent.focus(passwordInput);
+    expect(passwordInput).toHaveProperty("readOnly", false);
   });
 });

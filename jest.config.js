@@ -5,6 +5,7 @@ module.exports = {
     "!<rootDir>/src/main/**/*",
     "!<rootDir>/src/**/index.ts",
     "!**/*.d.ts",
+    "!<rootDir>/src/presentation/components/router/*",
   ],
   coverageDirectory: "coverage",
   testPathIgnorePatterns: [

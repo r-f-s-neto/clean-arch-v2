@@ -1,3 +1,3 @@
-export const makeApiUrl = (): string => {
-  return "http://";
+export const makeApiUrl = (path: string): string => {
+  return `process.env.API_URL${path}`;
 };
