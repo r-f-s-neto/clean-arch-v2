@@ -1,6 +1,6 @@
 import { ISetStorage } from "../protocols/storage/set-storage";
 
-export class SetStorageSpy implements ISetStorage {
+export class SetStorageMock implements ISetStorage {
   key: string;
   value: string;
 
