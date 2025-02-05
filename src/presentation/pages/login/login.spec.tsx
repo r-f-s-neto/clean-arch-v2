@@ -14,11 +14,14 @@ import faker from "faker";
 import { AuthenticationSpy } from "@/presentation/tests/mock-authentication";
 import { InvalidCredentialsError } from "@/domain/errors";
 import { MemoryRouter, useNavigate } from "react-router-dom";
+import { LocalSaveAccessTokenSpy } from "@/presentation/tests/mock-local-save-access-token";
+import { SetStorageMock } from "@/data/tests/mock-set-storage";
 
 type SutTypes = {
   sut: RenderResult;
   validationSpy: ValidationSpy;
   authenticationSpy: AuthenticationSpy;
+  localSaveAccessTokenSpy: LocalSaveAccessTokenSpy;
 };
 
 jest.mock("react-router-dom", () => ({
@@ -32,16 +35,23 @@ const navigate = jest.fn();
 const makeSut = (): SutTypes => {
   const validationSpy = new ValidationSpy();
   const authenticationSpy = new AuthenticationSpy();
+  const localSaveAccessTokenSpy = new LocalSaveAccessTokenSpy(
+    new SetStorageMock()
+  );
   const sut = render(
     <MemoryRouter
       initialEntries={["/login"]}
       initialIndex={0}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
-      <Login validation={validationSpy} authentication={authenticationSpy} />
+      <Login
+        validation={validationSpy}
+        authentication={authenticationSpy}
+        localSaveAccessToken={localSaveAccessTokenSpy}
+      />
     </MemoryRouter>
   );
-  return { sut, validationSpy, authenticationSpy };
+  return { sut, validationSpy, authenticationSpy, localSaveAccessTokenSpy };
 };
 
 describe("Login Component", () => {
@@ -261,7 +271,9 @@ describe("Login Component", () => {
   });
 
   test("Should add accessToken to localStorage", async () => {
-    const { sut, authenticationSpy, validationSpy } = makeSut();
+    const { sut, authenticationSpy, validationSpy, localSaveAccessTokenSpy } =
+      makeSut();
+    jest.spyOn(localSaveAccessTokenSpy, "save");
     validationSpy.errorMessage = null;
     const { getByTestId } = sut;
     const email = faker.internet.email();
@@ -274,8 +286,7 @@ describe("Login Component", () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        "accessToken",
+      expect(localSaveAccessTokenSpy.save).toHaveBeenCalledWith(
         authenticationSpy.account.accessToken
       );
       expect(navigate).toHaveBeenCalledWith("/");

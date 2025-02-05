@@ -10,13 +10,19 @@ import FormContext from "@/presentation/contexts/form/form-context";
 import { Validation } from "@/presentation/protocols/validation";
 import { IAuthentication } from "@/domain/usecases";
 import { Link, useNavigate } from "react-router-dom";
+import { ISaveAccessToken } from "@/domain/usecases/save-access-token";
 
 type Props = {
   validation: Validation;
   authentication: IAuthentication;
+  localSaveAccessToken: ISaveAccessToken;
 };
 
-const Login: React.FC<Props> = ({ validation, authentication }) => {
+const Login: React.FC<Props> = ({
+  validation,
+  authentication,
+  localSaveAccessToken,
+}) => {
   const navigate = useNavigate();
   const [state, setState] = useState({
     isLoading: false,
@@ -45,7 +51,7 @@ const Login: React.FC<Props> = ({ validation, authentication }) => {
         password: state.password,
       });
 
-      localStorage.setItem("accessToken", account.accessToken);
+      localSaveAccessToken.save(account.accessToken);
       navigate("/");
     } catch (error) {
       setState((prevState) => {
