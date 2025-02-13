@@ -1,3 +1,4 @@
+import { SignUp } from "@/presentation/pages";
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -11,6 +12,7 @@ const Router: React.FC<RouterProps> = ({ makeLogin }: RouterProps) => {
       <Suspense fallback={<div>carregando...</div>}>
         <Routes>
           <Route path="/login" element={React.createElement(lazyMakeLogin)} />
+          <Route path="/signup" element={<SignUp />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
