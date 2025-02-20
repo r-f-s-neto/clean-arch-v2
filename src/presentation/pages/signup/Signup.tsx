@@ -9,12 +9,14 @@ import {
 import FormContext from "@/presentation/contexts/form/form-context";
 import { Link, useNavigate } from "react-router-dom";
 import { Validation } from "@/presentation/protocols/validation";
+import { IAddAccount } from "@/domain/usecases/add-account";
 
 type Props = {
   validation: Validation;
+  addAccount: IAddAccount;
 };
 
-const SignUp: React.FC<Props> = ({ validation }: Props) => {
+const SignUp: React.FC<Props> = ({ validation, addAccount }: Props) => {
   const navigate = useNavigate();
   const [state, setState] = useState({
     isLoading: false,
@@ -41,8 +43,33 @@ const SignUp: React.FC<Props> = ({ validation }: Props) => {
       <FormContext.Provider value={{ state, setState, validation }}>
         <form
           className={Styles.form}
-          onSubmit={() => {
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (state.isLoading || isSubmitDisabled) {
+              return;
+            }
             setState((prevState) => ({ ...prevState, isLoading: true }));
+            try {
+              const response = await addAccount.add({
+                name: state.name,
+                email: state.email,
+                password: state.password,
+                passwordConfirmation: state.passwordConfirmation,
+              });
+              setState((prevState) => ({
+                ...prevState,
+                isLoading: false,
+                mainError: "",
+              }));
+              navigate("/login");
+            } catch (error) {
+              setState((prevState) => ({
+                ...prevState,
+                isLoading: false,
+                mainError: error.message,
+              }));
+              console.log(error);
+            }
           }}
           data-testid="form"
         >
@@ -65,11 +92,18 @@ const SignUp: React.FC<Props> = ({ validation }: Props) => {
             disabled={isSubmitDisabled}
             type="submit"
           >
-            Entrar
+            Cadastrar
           </button>
-          <Link data-testid="login" to={"/login"} className={Styles.link}>
+          <a
+            data-testid="login"
+            className={Styles.link}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/login");
+            }}
+          >
             Voltar para login
-          </Link>
+          </a>
           <FormStatus />
         </form>
       </FormContext.Provider>

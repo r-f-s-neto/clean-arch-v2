@@ -17,26 +17,37 @@ import { InvalidCredentialsError } from "@/domain/errors";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import { LocalSaveAccessTokenSpy } from "@/presentation/tests/mock-local-save-access-token";
 import { SetStorageMock } from "@/data/tests/mock-set-storage";
+import { AddAccountSpy } from "@/presentation/tests/mock-add-account";
 
 type SutType = {
   sut: RenderResult;
   validationSpy: ValidationSpy;
+  addAccountSpy: AddAccountSpy;
 };
 
 const makeSut = (): SutType => {
   const validationSpy = new ValidationSpy();
+  const addAccountSpy = new AddAccountSpy();
   const sut = render(
     <MemoryRouter
       initialEntries={["/signup"]}
       initialIndex={0}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
-      <SignUp validation={validationSpy} />
+      <SignUp validation={validationSpy} addAccount={addAccountSpy} />
     </MemoryRouter>
   );
 
-  return { sut, validationSpy };
+  return { sut, validationSpy, addAccountSpy };
 };
+
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useNavigate: jest.fn(),
+}));
+
+const navigate = jest.fn();
+(useNavigate as jest.Mock).mockReturnValue(navigate);
 
 describe("SignUp Component", () => {
   afterEach(cleanup);
@@ -266,7 +277,7 @@ describe("SignUp Component", () => {
     expect(submitButton).toHaveProperty("disabled", false);
   });
 
-  test("Should show loading when press submit button", () => {
+  test("Should show loading when press submit button", async () => {
     const { sut } = makeSut();
     const { getByTestId, queryByTestId } = sut;
     const nameInput = getByTestId("name");
@@ -287,7 +298,143 @@ describe("SignUp Component", () => {
     });
     const form = getByTestId("form");
     fireEvent.submit(form);
-    const loading = queryByTestId("loading");
-    expect(loading).toBeTruthy();
+    await waitFor(() => {
+      const loading = queryByTestId("loading");
+      expect(loading).toBeTruthy();
+    });
+  });
+
+  test("Should call addAccount with correct values", async () => {
+    const { sut, addAccountSpy } = makeSut();
+    const add = jest.spyOn(addAccountSpy, "add");
+
+    const { getByTestId } = sut;
+    const nameInput = getByTestId("name");
+    const name = faker.random.word();
+    fireEvent.input(nameInput, { target: { value: name } });
+    const email = faker.internet.email();
+    const emailInput = getByTestId("email");
+    fireEvent.input(emailInput, { target: { value: email } });
+    const password = faker.internet.password();
+    const passwordInput = getByTestId("password");
+    fireEvent.input(passwordInput, {
+      target: { value: password },
+    });
+    const passwordConfirmation = faker.internet.password();
+    const passwordConfirmationInput = getByTestId("passwordConfirmation");
+    fireEvent.input(passwordConfirmationInput, {
+      target: { value: passwordConfirmation },
+    });
+    const form = getByTestId("form");
+    fireEvent.submit(form);
+    await waitFor(() => {
+      expect(add).toHaveBeenCalledWith({
+        name,
+        email,
+        password,
+        passwordConfirmation,
+      });
+    });
+  });
+
+  test("should call addAccount once", async () => {
+    const { sut, addAccountSpy } = makeSut();
+    const add = jest.spyOn(addAccountSpy, "add");
+
+    const { getByTestId } = sut;
+    const nameInput = getByTestId("name");
+    const name = faker.random.word();
+    fireEvent.input(nameInput, { target: { value: name } });
+    const email = faker.internet.email();
+    const emailInput = getByTestId("email");
+    fireEvent.input(emailInput, { target: { value: email } });
+    const password = faker.internet.password();
+    const passwordInput = getByTestId("password");
+    fireEvent.input(passwordInput, {
+      target: { value: password },
+    });
+    const passwordConfirmation = faker.internet.password();
+    const passwordConfirmationInput = getByTestId("passwordConfirmation");
+    fireEvent.input(passwordConfirmationInput, {
+      target: { value: passwordConfirmation },
+    });
+    const form = getByTestId("form");
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(add).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  test("Should not call addAccount if form isInvalid", async () => {
+    const { sut, validationSpy, addAccountSpy } = makeSut();
+    const { getByTestId } = sut;
+    const add = jest.spyOn(addAccountSpy, "add");
+    const error = faker.random.word();
+    validationSpy.errorMessage = error;
+    const nameInput = getByTestId("name");
+    const name = faker.random.word();
+    fireEvent.input(nameInput, { target: { value: name } });
+    const email = faker.internet.email();
+    const emailInput = getByTestId("email");
+    fireEvent.input(emailInput, { target: { value: email } });
+    const password = faker.internet.password();
+    const passwordInput = getByTestId("password");
+    fireEvent.input(passwordInput, {
+      target: { value: password },
+    });
+    const passwordConfirmation = faker.internet.password();
+    const passwordConfirmationInput = getByTestId("passwordConfirmation");
+    fireEvent.input(passwordConfirmationInput, {
+      target: { value: passwordConfirmation },
+    });
+    const form = getByTestId("form");
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(add).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  test("Should presents error if addAccount fails", async () => {
+    const { sut, addAccountSpy } = makeSut();
+    const { getByTestId, queryByTestId } = sut;
+    jest
+      .spyOn(addAccountSpy, "add")
+      .mockRejectedValueOnce(new InvalidCredentialsError());
+    const nameInput = getByTestId("name");
+    const name = faker.random.word();
+    fireEvent.input(nameInput, { target: { value: name } });
+    const email = faker.internet.email();
+    const emailInput = getByTestId("email");
+    fireEvent.input(emailInput, { target: { value: email } });
+    const password = faker.internet.password();
+    const passwordInput = getByTestId("password");
+    fireEvent.input(passwordInput, {
+      target: { value: password },
+    });
+    const passwordConfirmation = faker.internet.password();
+    const passwordConfirmationInput = getByTestId("passwordConfirmation");
+    fireEvent.input(passwordConfirmationInput, {
+      target: { value: passwordConfirmation },
+    });
+    const form = getByTestId("form");
+    fireEvent.submit(form);
+    await waitFor(() => {
+      const errorDiv = queryByTestId("error-message");
+      expect(errorDiv).toBeTruthy();
+      expect(errorDiv.textContent).toBe("Credenciais inválidas");
+    });
+  });
+
+  test("Should got to login page", async () => {
+    const { sut } = makeSut();
+    const { getByTestId } = sut;
+    const backToLoginButton = getByTestId("login");
+    fireEvent.click(backToLoginButton);
+    await waitFor(() => {
+      expect(navigate).toHaveBeenCalledWith("/login");
+    });
   });
 });
